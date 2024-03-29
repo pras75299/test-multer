@@ -2,6 +2,8 @@ const path = require("path");
 const express = require("express");
 const ejs = require("ejs");
 const multer = require("multer");
+const mongoose = require("mongoose");
+const File = require("./models/file.model");
 
 require("dotenv").config();
 const app = express();
@@ -35,9 +37,39 @@ app.get("/", (req, res) => {
 app.post("/upload", upload.single("profileImage"), (req, res) => {
   console.log(req.body);
   console.log(req.file);
-  return res.redirect("/");
+  //   return res.redirect("/");
+  if (req.file) {
+    const newFile = new File({
+      filename: req.file.filename,
+      filepath: req.file.path,
+      filetype: req.file.mimetype,
+      filesize: req.file.size,
+    });
+
+    newFile
+      .save()
+      .then(() => {
+        console.log("File saved to MongoDB.");
+        res.redirect("/");
+      })
+      .catch((err) => {
+        console.error("Error saving file metadata to MongoDB:", err);
+        res.status(500).send("Error uploading file.");
+      });
+  } else {
+    res.status(400).send("No file uploaded.");
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server started on ${PORT}`);
-});
+//mongo db connection method
+mongoose
+  .connect(process.env.CONNECTION)
+  .then(() => {
+    console.log("app is connected with mongo");
+    app.listen(PORT, (req, res) => {
+      console.log(`Everything is working fine ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.log(`Message: Error in mongodb connect with ${error}`);
+  });
