@@ -17,6 +17,7 @@
   "author": "Prashant singh",
   "license": "ISC",
   "dependencies": {
+    "cloudinary": "^2.1.0",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.9",
     "express": "^4.19.2",
