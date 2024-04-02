@@ -2,6 +2,9 @@ const Router = require("express").Router;
 const File = require("../models/file.model.js");
 const multer = require("multer");
 const path = require("path");
+
+//add cloudinary
+const { uploadOnCloudinary } = require("../middlewares/cloudinary.js");
 const router = Router();
 
 const storage = multer.diskStorage({
@@ -16,7 +19,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post("/", upload.single("profileImage"), (req, res) => {
+router.post("/", upload.single("profileImage"), async (req, res) => {
   console.log(req.body);
   console.log(req.file);
   //   return res.redirect("/");
@@ -28,10 +31,14 @@ router.post("/", upload.single("profileImage"), (req, res) => {
       filesize: req.file.size,
     });
 
-    newFile
+    await newFile
       .save()
       .then(() => {
         console.log("File saved to MongoDB.");
+        const cloudinaryResponse = uploadOnCloudinary(req.file.path);
+        if (!cloudinaryResponse) {
+          res.status(500).send("Failed to upload file to Cloudinary.");
+        }
         res.redirect("/");
       })
       .catch((err) => {
